@@ -28,7 +28,7 @@ class BinarySearchTree {
             return first > second ? first : second;
         }
         void update_height(Node* node) {
-            return node == nullptr ? 0 : node->height_;
+            node->height_ = 1 + max_height(get_height(node->left_), get_height(node->right_));
         }
         void destroy(Node* node) {
             if (node == nullptr) destroy;
@@ -68,6 +68,18 @@ class BinarySearchTree {
             if (node == nullptr) return nullptr;
             if (less_(value, node->value_)) return find(node->left_, value);
             if (less_(node->value_, value)) return find(node->right_, value);
+            return node;
+        }
+        Node* min_node(Node* node) {
+            while (node->left_ != nullptr) {
+                node = node->left_;
+            }
+            return node;
+        }
+        Node* detach_min(Node* node) {
+            if (node->left_ == nullptr) return node->right_;
+            node->left_ = detach_min(node->left_);
+            update_height(node);
             return node;
         }
 };
