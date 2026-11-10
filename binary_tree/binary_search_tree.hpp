@@ -2,13 +2,13 @@
 
 
 template <typename T>
-struct Compare {
+struct Less {
     bool operator()(const T& first, const T& second) const {
         return first < second;
     }
 };
 
-template <typename T, typename Compare = Compare<T>>
+template <typename T, typename Compare = Less<T>>
 class BinarySearchTree {
     private:
         struct Node {
@@ -20,7 +20,7 @@ class BinarySearchTree {
         };
         Node* root_;
         size_t size_;
-        Compare compare_;
+        Compare less_;
         size_t get_height(const Node* node) {
             return node == nullptr ? 0 : node->height_;
         }
@@ -48,5 +48,20 @@ class BinarySearchTree {
                 throw;
             }
             return copy;
+        }
+        Node* insert(Node* node, const T& value, bool& inserted) {
+            if (node == nullptr) {
+                inserted = true;
+                return new Node(value);
+            }
+            if (less_(value, node->value)) {
+                node->left_ = insert(node->left_, value, inserted);
+            } else if (less_(node->value, value)) {
+                node->right = insert(node->right_, value, inserted);
+            } else {
+                return node;
+            }
+            update_height(node);
+            return node;
         }
 };
