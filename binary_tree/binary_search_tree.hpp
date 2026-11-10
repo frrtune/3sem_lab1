@@ -82,4 +82,31 @@ class BinarySearchTree {
             update_height(node);
             return node;
         }
+        Node* remove(Node* node, const T& value, bool& removed) {
+            if (node == nullptr) return nullptr;
+            if (less_(value, node->value_)) {
+                node->left_ = remove(node->left_, value, removed);
+            } else if (less_(node->value_, value)) {
+                node->right_ = remove(node->right_, value, removed);
+            } else {
+                removed = true;
+                if (node->right_ == nullptr) {
+                    Node* left = node->left_;
+                    delete node;
+                    return left;
+                }
+                if (node->left_ == nullptr) {
+                    Node* right = node->right_;
+                    delete node;
+                    return right;
+                }
+                Node* target = node;
+                node = min_node(target->right_);
+                node->right_ = detach_min(target->right_);
+                node->left_ = target->left_;
+                delete target;
+            }
+            update_height(node);
+            return node;
+        }
 };
