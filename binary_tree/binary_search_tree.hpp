@@ -64,4 +64,10 @@ class BinarySearchTree {
             update_height(node);
             return node;
         }
+        Node* find(Node* node, const T& value) const {
+            if (node == nullptr) return nullptr;
+            if (less_(value, node->value_)) return find(node->left_, value);
+            if (less_(node->value_, value)) return find(node->right_, value);
+            return node;
+        }
 };
