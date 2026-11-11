@@ -109,4 +109,11 @@ class BinarySearchTree {
             update_height(node);
             return node;
         }
+        template <typename Visitor>
+        void in_order(const Node* node, Visitor& visit) {
+            if (node == nullptr) return;
+            in_order(node->left_, visit);
+            visit(node->value_);
+            in_order(node->right_, visit);
+        }
 };
