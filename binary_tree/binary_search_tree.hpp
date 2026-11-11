@@ -160,4 +160,11 @@ class BinarySearchTree {
             if (inserted) size_++;
             return inserted;
         }
+        const T* Find(const T& value) const {
+            Node* node = find(root_, value);
+            return node == nullptr ? nullptr : &node->value_;
+        }
+        bool Contains(const T& value) const {
+            return find(root_, value) != nullptr;
+        }
     };
