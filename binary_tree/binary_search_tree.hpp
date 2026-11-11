@@ -127,4 +127,14 @@ class BinarySearchTree {
             compare_ = other.compare_;
             other.compare_ = temporary_compare;
         }
-};
+    public:
+        BinarySearchTree(Compare compare = Compare()) : root_(nullptr), size_(0), compare_(compare) {}
+        BinarySearchTree(const BinarySearchTree<T, Compare>& tree) : root_(clone(tree.root_), size_(tree.size_), compare_(tree).compare_) {}
+        BinarySearchTree<T, Compare>& operator=(const BinarySearchTree<T, Compare>& tree) {
+            if (this != &tree) {
+                BinarySearchTree<T, Compare> copy = tree;
+                swap(copy);
+            }
+            return *this;
+        }
+    };
