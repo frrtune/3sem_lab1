@@ -30,7 +30,7 @@ class BinarySearchTree {
         Node* root_;
         size_t size_;
         Compare less_;
-        size_t get_height(const Node* node) {
+        size_t get_height(const Node* node) const {
             return node == nullptr ? 0 : node->height_;
         }
         size_t max_height(size_t first, size_t second) {
@@ -40,7 +40,7 @@ class BinarySearchTree {
             node->height_ = 1 + max_height(get_height(node->left_), get_height(node->right_));
         }
         void destroy(Node* node) {
-            if (node == nullptr) destroy;
+            if (node == nullptr) return;
             destroy(node->left_);
             destroy(node->right_);
             delete node;
@@ -63,10 +63,10 @@ class BinarySearchTree {
                 inserted = true;
                 return new Node(value);
             }
-            if (less_(value, node->value)) {
+            if (less_(value, node->value_)) {
                 node->left_ = insert(node->left_, value, inserted);
-            } else if (less_(node->value, value)) {
-                node->right = insert(node->right_, value, inserted);
+            } else if (less_(node->value_, value)) {
+                node->right_ = insert(node->right_, value, inserted);
             } else {
                 return node;
             }
@@ -119,7 +119,7 @@ class BinarySearchTree {
             return node;
         }
         template <typename Visitor>
-        void traverse(const Node* node, TraversalOrder order, Visitor& visit) {
+        void traverse(const Node* node, TraversalOrder order, Visitor& visit) const {
             if (node == nullptr) return;
             switch (order) {
                 case TraversalOrder::RootLeftRight:
@@ -161,13 +161,13 @@ class BinarySearchTree {
             size_t temporary_size = size_;
             size_ = other.size_;
             other.size_ = temporary_size;
-            Compare temporary_compare = compare;
-            compare_ = other.compare_;
-            other.compare_ = temporary_compare;
+            Compare temporary_compare = less_;
+            less_ = other.less_;
+            other.less_ = temporary_compare;
         }
     public:
-        BinarySearchTree(Compare compare = Compare()) : root_(nullptr), size_(0), compare_(compare) {}
-        BinarySearchTree(const BinarySearchTree<T, Compare>& tree) : root_(clone(tree.root_), size_(tree.size_), compare_(tree).compare_) {}
+        BinarySearchTree(Compare compare = Compare()) : root_(nullptr), size_(0), less_(compare) {}
+        BinarySearchTree(const BinarySearchTree& tree) : root_(clone(tree.root_)), size_(tree.size_), less_(tree.less_) {}
         BinarySearchTree<T, Compare>& operator=(const BinarySearchTree<T, Compare>& tree) {
             if (this != &tree) {
                 BinarySearchTree<T, Compare> copy = tree;
