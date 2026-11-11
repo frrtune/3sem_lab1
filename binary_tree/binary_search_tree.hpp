@@ -154,4 +154,10 @@ class BinarySearchTree {
             root_ = nullptr;
             size_ = 0;
         }
+        bool Insert(const T& value) {
+            bool inserted = false;
+            root_ = insert(root_, value, inserted);
+            if (inserted) size_++;
+            return inserted;
+        }
     };
