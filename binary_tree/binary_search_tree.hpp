@@ -137,4 +137,21 @@ class BinarySearchTree {
             }
             return *this;
         }
+        ~BinarySearchTree() {
+            destroy(root_);
+        }
+        size_t GetCount() const {
+            return size_;
+        }
+        size_t IsEmpty() const {
+            return size_ == 0;
+        }
+        size_t GetHeight() const {
+            return get_height(root_);
+        }
+        void Clear() {
+            destroy(root_);
+            root_ = nullptr;
+            size_ = 0;
+        }
     };
