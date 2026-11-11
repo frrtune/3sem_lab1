@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 class Complex {
     private:
@@ -41,3 +42,9 @@ class Complex {
             return imaginary_ < other.imaginary_;
         }
 };
+
+inline std::ostream& operator<<(std::ostream& out, const Complex& number) {
+    out << number.GetReal();
+    if (number.GetImaginary() >= 0) out << '+';
+    return out << number.GetImaginary() << 'i';
+}
