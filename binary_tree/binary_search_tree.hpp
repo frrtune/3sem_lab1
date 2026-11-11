@@ -8,6 +8,15 @@ struct Less {
     }
 };
 
+enum class TraversalOrder {
+    RootLeftRight,
+    RootRightLeft,
+    LeftRightRoot,
+    LeftRootRight,
+    RightLeftRoot,
+    RightRootLeft
+};
+
 template <typename T, typename Compare = Less<T>>
 class BinarySearchTree {
     private:
@@ -110,11 +119,40 @@ class BinarySearchTree {
             return node;
         }
         template <typename Visitor>
-        void in_order(const Node* node, Visitor& visit) {
+        void traverse(const Node* node, TraversalOrder order, Visitor& visit) {
             if (node == nullptr) return;
-            in_order(node->left_, visit);
-            visit(node->value_);
-            in_order(node->right_, visit);
+            switch (order) {
+                case TraversalOrder::RootLeftRight:
+                    visit(node->value_);
+                    traverse(node->left_, order, visit);
+                    traverse(node->right_, order, visit);
+                    break;
+                case TraversalOrder::RootRightLeft:
+                    visit(node->value_);
+                    traverse(node->right_, order, visit);
+                    traverse(node->left_, order, visit);
+                    break;
+                case TraversalOrder::LeftRightRoot:
+                    traverse(node->left_, order, visit);
+                    traverse(node->right_, order, visit);
+                    visit(node->value_);
+                    break;
+                case TraversalOrder::LeftRootRight:
+                    traverse(node->left_, order, visit);
+                    visit(node->value_);
+                    traverse(node->right_, order, visit);
+                    break;
+                case TraversalOrder::RightLeftRoot:
+                    traverse(node->right_, order, visit);
+                    traverse(node->left_, order, visit);
+                    visit(node->value_);
+                    break;
+                case TraversalOrder::RightRootLeft:
+                    traverse(node->right_, order, visit);
+                    visit(node->value_);
+                    traverse(node->left_, order, visit);
+                    break;
+            }
         }
         void swap(BinarySearchTree<T, Compare>& other) {
             Node* temporary_root = root_;
@@ -172,5 +210,9 @@ class BinarySearchTree {
             root_ = remove(root_, value, removed);
             if (removed) size_--;
             return removed;
+        }
+        template <typename Visitor> 
+        void Traverse(TraversalOrder order, Visitor visit) const {
+            traverse(root_, order, visit);
         }
     };
