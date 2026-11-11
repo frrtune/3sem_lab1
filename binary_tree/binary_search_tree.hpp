@@ -116,4 +116,15 @@ class BinarySearchTree {
             visit(node->value_);
             in_order(node->right_, visit);
         }
+        void swap(BinarySearchTree<T, Compare>& other) {
+            Node* temporary_root = root_;
+            root_ = other.root_;
+            other.root_ = temporary_root;
+            size_t temporary_size = size_;
+            size_ = other.size_;
+            other.size_ = temporary_size;
+            Compare temporary_compare = compare;
+            compare_ = other.compare_;
+            other.compare_ = temporary_compare;
+        }
 };
