@@ -167,4 +167,10 @@ class BinarySearchTree {
         bool Contains(const T& value) const {
             return find(root_, value) != nullptr;
         }
+        bool Remove(const T& value) {
+            bool removed = false;
+            root_ = remove(root_, value, removed);
+            if (removed) size_--;
+            return removed;
+        }
     };
