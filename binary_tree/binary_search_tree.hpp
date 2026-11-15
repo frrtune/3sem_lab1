@@ -24,12 +24,14 @@ class BinarySearchTree {
             T value_;
             Node* left_;
             Node* right_;
-            size_t height_; //можно ли хранить явно?
-            Node(const T& value) : value_(value), left_(nullptr), right_(nullptr), height_(1) {}
+            size_t height_;
+            bool red_;
+            Node(const T& value) : value_(value), left_(nullptr), right_(nullptr), height_(1), red_(red) {}
         };
         Node* root_;
         size_t size_;
         Compare less_;
+        bool balanced_;
         size_t get_height(const Node* node) const {
             return node == nullptr ? 0 : node->height_;
         }
@@ -39,6 +41,37 @@ class BinarySearchTree {
         void update_height(Node* node) {
             node->height_ = 1 + max_height(get_height(node->left_), get_height(node->right_));
         }
+
+        //балансировка
+        bool is_red(const Node* node) {
+            return node != nullptr && node->red_;
+        }
+        Node* rotate_left(Node* node) {
+            Node* pivot = node->right_;
+            node->right_ = pivot->left_;
+            pivot->left_ = node;
+            pivot->red_ = node->red_;
+            node->red_ = true;
+            update_height(node);
+            update_height(pivot);
+            return pivot;
+        }
+        Node* rotate_right(Node* node) {
+            Node* pivot = node->left_;
+            node->left_ = pivot->right_;
+            pivot->right_ = node;
+            pivot->red_ = node->red_;
+            node->red_ = true;
+            update_height(node);
+            update_height(pivot);
+            return pivot;
+        }
+        void flip_colors(Node* node) {
+            node->red_ = !node->red_;
+            node->left_->red_ = !node->left_->red_;
+            node->right_->red_ = !node->right_->red_;
+        }
+
         void destroy(Node* node) {
             if (node == nullptr) return;
             destroy(node->left_);
