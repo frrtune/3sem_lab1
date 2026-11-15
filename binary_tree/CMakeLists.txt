@@ -1,0 +1,2 @@
+add_library(binary_tree INTERFACE)
+target_include_directories(binary_tree INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
