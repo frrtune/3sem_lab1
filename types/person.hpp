@@ -62,3 +62,22 @@ class Person {
                 return id_ < other.id_;
             }
 };
+
+inline void PrintDate(std::ostream& out, time_t date) {
+    const std::tm* parts = std::localtime(&date);
+    if (parts == nullptr) {
+        out << '?';
+        return;
+    }
+    if (parts->tm_mday < 10) out << '0';
+    out << parts->tm_mday << '.';
+    if (parts->tm_mon + 1 < 10) out << '0';
+    out << parts->tm_mon + 1 << '.' << parts->tm_year + 1900;
+}
+
+inline std::ostream& operator<<(std::ostream& out, const Person& person) {
+    out << person.GetFullName() << " (" << person.GetID() << ", ";
+    PrintDate(out, person.GetBirthDate());
+    out << ")";
+    return out;
+}
