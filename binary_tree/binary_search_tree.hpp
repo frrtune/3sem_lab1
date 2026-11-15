@@ -71,6 +71,31 @@ class BinarySearchTree {
             node->left_->red_ = !node->left_->red_;
             node->right_->red_ = !node->right_->red_;
         }
+        Node* move_red_left(Node* node) {
+            flip_colors(node);
+            if (is_red(node->right_->left_)) {
+                node->right_ = rotate_right(node->right_);
+                node = rotate_left(node);
+                flip_colors(node);
+            }
+            return node;
+        }
+        Node* move_red_right(Node* node) {
+            flip_colors(node);
+            if (is_red(node->left_->left_)) {
+                node = rotate_right(node);
+                flip_colors(node);
+            }
+            return node;
+        }
+
+        Node* fix_up(Node* node) {
+            if (is_red(node->right_) && !is_red(node->left_)) node = rotate_left(node);
+            if (is_red(node->left_) && is_red(node->left_->left_)) node = rotate_right(node);
+            if (is_red(node->left_) && is_red(node->right_)) flip_colors(node);
+            update_height(node);
+            return node;
+        }
 
         void destroy(Node* node) {
             if (node == nullptr) return;
@@ -199,8 +224,10 @@ class BinarySearchTree {
             other.less_ = temporary_compare;
         }
     public:
-        BinarySearchTree(Compare compare = Compare()) : root_(nullptr), size_(0), less_(compare) {}
-        BinarySearchTree(const BinarySearchTree& tree) : root_(clone(tree.root_)), size_(tree.size_), less_(tree.less_) {}
+        BinarySearchTree(Compare compare = Compare(), bool balanced = false) : root_(nullptr), size_(0), less_(compare),
+        balanced_(balanced) {}
+        BinarySearchTree(const BinarySearchTree& tree, bool balanced = false) : root_(clone(tree.root_)), size_(tree.size_), less_(tree.less_),
+        balanced_(balanced) {}
         BinarySearchTree<T, Compare>& operator=(const BinarySearchTree<T, Compare>& tree) {
             if (this != &tree) {
                 BinarySearchTree<T, Compare> copy = tree;
