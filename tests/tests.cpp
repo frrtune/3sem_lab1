@@ -88,3 +88,25 @@ TEST_F(BinarySearchTreeTest, ClearEmptiesTree) {
 TEST_F(BinarySearchTreeTest, HeightIsThree) {
     EXPECT_EQ(tree.GetHeight(), 3u);
 }
+
+TEST(BinarySearchTreeRBTTest, BalancedTreeSatisfiesRedBlackProperties) {
+    BinarySearchTree<int> rbt(Less<int>{}, true);
+    for (int value : {1, 2, 3, 4, 5, 6, 7}) rbt.Insert(value);
+    EXPECT_TRUE(rbt.IsRedBlack());
+}
+
+TEST(BinarySearchTreeRBTTest, BalanceMethodFixesUnbalancedTree) {
+    BinarySearchTree<int> rbt;
+    for (int value : {1, 2, 3, 4, 5, 6, 7}) rbt.Insert(value);
+    EXPECT_FALSE(rbt.IsRedBlack());
+    rbt.Balance();
+    EXPECT_TRUE(rbt.IsRedBlack());
+}
+
+TEST(BinarySearchTreeRBTTest, BalancedTreeRemoveMaintainsProperties) {
+    BinarySearchTree<int> rbt(Less<int>{}, true);
+    for (int value : {4, 2, 6, 1, 3, 5, 7}) rbt.Insert(value);
+    EXPECT_TRUE(rbt.IsRedBlack());
+    rbt.Remove(2);
+    EXPECT_TRUE(rbt.IsRedBlack());
+}
