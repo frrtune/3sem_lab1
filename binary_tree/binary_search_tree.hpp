@@ -26,7 +26,7 @@ class BinarySearchTree {
             Node* right_;
             size_t height_;
             bool red_;
-            Node(const T& value) : value_(value), left_(nullptr), right_(nullptr), height_(1), red_(red) {}
+            Node(const T& value, bool red = false) : value_(value), left_(nullptr), right_(nullptr), height_(1), red_(red) {}
         };
         Node* root_;
         size_t size_;
@@ -41,9 +41,12 @@ class BinarySearchTree {
         void update_height(Node* node) {
             node->height_ = 1 + max_height(get_height(node->left_), get_height(node->right_));
         }
+        bool equal_values(const T& first, const T& second) const {
+            return !less_(first, second) && !less_(second, first);
+        }
 
         //балансировка
-        bool is_red(const Node* node) {
+        bool is_red(const Node* node) const {
             return node != nullptr && node->red_;
         }
         Node* rotate_left(Node* node) {
@@ -96,6 +99,61 @@ class BinarySearchTree {
             update_height(node);
             return node;
         }
+        Node* rb_insert(Node* node, const T& value, bool& inserted) {
+            if (node == nullptr) {
+                inserted = true;
+                return new Node(value, true);
+            }
+            if (less_(value, node->value_)) {
+                node->left_ = rb_insert(node->left_, value, inserted);
+            } else if (less_(node->value_, value)) {
+                node->right_ = rb_insert(node->right_, value, inserted);
+            } else {
+                return node;
+            }
+            return fix_up(node);
+        }
+        Node* rb_detach_min(Node* node) noexcept {
+            if (node->left_ == nullptr) return nullptr;
+            if (!is_red(node->left_) && !is_red(node->left_->left_)) node = move_red_left(node);
+            node->left_ = rb_detach_min(node->left_);
+            return fix_up(node);
+        }
+
+        Node* rb_remove(Node* node, const T& value) {
+            if (less_(value, node->value_)) {
+                if (!is_red(node->left_) && !is_red(node->left_->left_)) node = move_red_left(node);
+                node->left_ = rb_remove(node->left_, value);
+            } else {
+                if (is_red(node->left_)) node = rotate_right(node);
+                if (equal_values(value, node->value_) && node->right_ == nullptr) {
+                    delete node;
+                    return nullptr;
+                }
+                if (!is_red(node->right_) && !is_red(node->right_->left_)) node = move_red_right(node);
+                if (equal_values(value, node->value_)) {
+                    Node* successor = min_node(node->right_);
+                    Node* new_right = rb_detach_min(node->right_);
+                    successor->left_ = node->left_;
+                    successor->right_ = new_right;
+                    successor->red_ = node->red_;
+                    delete node;
+                    node = successor;
+                } else {
+                    node->right_ = rb_remove(node->right_, value);
+                }
+            }
+            return fix_up(node);
+        }
+        int check_red_black(const Node* node) const {
+            if (node == nullptr) return 1;
+            if (is_red(node->right_)) return -1;
+            if (is_red(node) && is_red(node->left_)) return -1;
+            int left = check_red_black(node->left_);
+            int right = check_red_black(node->right_);
+            if (left == -1 || right == -1 || left != right) return -1;
+            return left + (is_red(node) ? 0 : 1);
+        }
 
         void destroy(Node* node) {
             if (node == nullptr) return;
@@ -107,10 +165,11 @@ class BinarySearchTree {
             if (source == nullptr) return nullptr;
             Node* copy = new Node(source->value_);
             copy->height_ = source->height_;
+            copy->red_ = source->red_;
             try {
                 copy->left_ = clone(source->left_);
                 copy->right_ = clone(source->right_);
-            } catch(...) {
+            } catch (...) {
                 destroy(copy);
                 throw;
             }
@@ -222,6 +281,9 @@ class BinarySearchTree {
             Compare temporary_compare = less_;
             less_ = other.less_;
             other.less_ = temporary_compare;
+            bool temporary_balanced = balanced_;
+            balanced_ = other.balanced_;
+            other.balanced_ = temporary_balanced;
         }
     public:
         BinarySearchTree(Compare compare = Compare(), bool balanced = false) : root_(nullptr), size_(0), less_(compare),
@@ -254,7 +316,12 @@ class BinarySearchTree {
         }
         bool Insert(const T& value) {
             bool inserted = false;
-            root_ = insert(root_, value, inserted);
+            if (balanced_) {
+                root_ = rb_insert(root_, value, inserted);
+                root_->red_ = false;
+            } else {
+                root_ = insert(root_, value, inserted);
+            }
             if (inserted) size_++;
             return inserted;
         }
@@ -267,9 +334,26 @@ class BinarySearchTree {
         }
         bool Remove(const T& value) {
             bool removed = false;
-            root_ = remove(root_, value, removed);
+            if (balanced_) {
+                if (find(root_, value) == nullptr) return false;
+                if (!is_red(root_->left_) && !is_red(root_->right_)) root_->red_ = true;
+                root_ = rb_remove(root_, value);
+                if (root_ != nullptr) root_->red_ = false;
+                removed = true;
+            } else {
+                root_ = remove(root_, value, removed);
+            }
             if (removed) size_--;
             return removed;
+        }
+        bool IsRedBlack() const {
+            return !is_red(root_) && check_red_black(root_) != -1;
+        }
+        void Balance() {
+            BinarySearchTree<T, Compare> rebuilt(less_, true);
+            auto insert_value = [&](const T& value) { rebuilt.Insert(value); };
+            traverse(root_, TraversalOrder::LeftRootRight, insert_value);
+            swap(rebuilt);
         }
         template <typename Visitor> 
         void Traverse(TraversalOrder order, Visitor visit) const {
