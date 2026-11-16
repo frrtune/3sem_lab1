@@ -11,3 +11,5 @@ add_subdirectory(googletest-1.17.0)
 add_subdirectory(binary_tree)
 add_subdirectory(types)
 add_subdirectory(tests)
+
+add_executable(lab1_ui main.cpp)
