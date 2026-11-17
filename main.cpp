@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <windows.h>
 #include "binary_tree/binary_search_tree.hpp"
 #include "types/complex.hpp"
 #include "types/person.hpp"
@@ -9,6 +10,9 @@
 using namespace std;
 
 int main() {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    
     bool balanced = false;
     int type = 1;
 
