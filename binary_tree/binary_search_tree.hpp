@@ -113,7 +113,7 @@ class BinarySearchTree {
             }
             return fix_up(node);
         }
-        Node* rb_detach_min(Node* node) noexcept {
+        Node* rb_detach_min(Node* node) {
             if (node->left_ == nullptr) return nullptr;
             if (!is_red(node->left_) && !is_red(node->left_->left_)) node = move_red_left(node);
             node->left_ = rb_detach_min(node->left_);
