@@ -3,23 +3,23 @@
 #include "../binary_tree/binary_search_tree.hpp"
 
 namespace {
-std::vector<int> Traversed(const BinarySearchTree<int>& tree, TraversalOrder order) {
+std::vector<int> Traversed(const BinarySearchTree<int, int>& tree, TraversalOrder order) {
     std::vector<int> result;
-    tree.Traverse(order, [&](const int& value) { result.push_back(value); });
+    tree.Traverse(order, [&](const int& key, const int& value) { result.push_back(value); });
     return result;
 }
 }
 
 class BinarySearchTreeTest : public ::testing::Test {
     protected:
-        BinarySearchTree<int> tree;
+        BinarySearchTree<int, int> tree;
         void SetUp() override {
-            for (int value : {4, 2, 6, 1, 3, 5, 7}) tree.Insert(value);
+            for (int value : {4, 2, 6, 1, 3, 5, 7}) tree.Insert(value, value);
         }
 };
 
 TEST(BinarySearchTreeBasicTest, NewTreeIsEmpty) {
-    BinarySearchTree<int> empty;
+    BinarySearchTree<int, int> empty;
     EXPECT_TRUE(empty.IsEmpty());
     EXPECT_EQ(empty.GetCount(), 0u);
     EXPECT_FALSE(empty.Contains(1));
@@ -32,7 +32,7 @@ TEST_F(BinarySearchTreeTest, InsertAndContains) {
 }
 
 TEST_F(BinarySearchTreeTest, InsertDuplicateReturnsFalse) {
-    EXPECT_FALSE(tree.Insert(4));
+    EXPECT_FALSE(tree.Insert(4, 4));
     EXPECT_EQ(tree.GetCount(), 7u);
 }
 
@@ -73,7 +73,7 @@ TEST_F(BinarySearchTreeTest, AllSixTraversals) {
 }
 
 TEST_F(BinarySearchTreeTest, CopyIsIndependent) {
-    BinarySearchTree<int> copy(tree);
+    BinarySearchTree<int, int> copy(tree);
     copy.Remove(4);
     EXPECT_TRUE(tree.Contains(4));
     EXPECT_FALSE(copy.Contains(4));
@@ -90,22 +90,22 @@ TEST_F(BinarySearchTreeTest, HeightIsThree) {
 }
 
 TEST(BinarySearchTreeRBTTest, BalancedTreeSatisfiesRedBlackProperties) {
-    BinarySearchTree<int> rbt(Less<int>{}, true);
-    for (int value : {1, 2, 3, 4, 5, 6, 7}) rbt.Insert(value);
+    BinarySearchTree<int, int> rbt(true);
+    for (int value : {1, 2, 3, 4, 5, 6, 7}) rbt.Insert(value, value);
     EXPECT_TRUE(rbt.IsRedBlack());
 }
 
 TEST(BinarySearchTreeRBTTest, BalanceMethodFixesUnbalancedTree) {
-    BinarySearchTree<int> rbt;
-    for (int value : {1, 2, 3, 4, 5, 6, 7}) rbt.Insert(value);
+    BinarySearchTree<int, int> rbt;
+    for (int value : {1, 2, 3, 4, 5, 6, 7}) rbt.Insert(value, value);
     EXPECT_FALSE(rbt.IsRedBlack());
     rbt.Balance();
     EXPECT_TRUE(rbt.IsRedBlack());
 }
 
 TEST(BinarySearchTreeRBTTest, BalancedTreeRemoveMaintainsProperties) {
-    BinarySearchTree<int> rbt(Less<int>{}, true);
-    for (int value : {4, 2, 6, 1, 3, 5, 7}) rbt.Insert(value);
+    BinarySearchTree<int, int> rbt(true);
+    for (int value : {4, 2, 6, 1, 3, 5, 7}) rbt.Insert(value, value);
     EXPECT_TRUE(rbt.IsRedBlack());
     rbt.Remove(2);
     EXPECT_TRUE(rbt.IsRedBlack());
