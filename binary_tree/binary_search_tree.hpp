@@ -20,7 +20,7 @@ class BinarySearchTree {
             Node* right_;
             size_t height_;
             bool red_;
-            Node(const T& key, const T& value, bool red = false) 
+            Node(const TKey& key, const TValue& value, bool red = false) 
             : key_(key), value_(value), left_(nullptr), right_(nullptr), height_(1), red_(red) {}
         };
         Node* root_;
@@ -29,7 +29,10 @@ class BinarySearchTree {
         bool less(const TKey& first, const TKey& second) const {
             return first < second;
         }
-        bool equal(const TKey& first, const TKey& second) const {
+        bool equal_values(const TKey& first, const TKey& second) const {
+            return !less(first, second) && !less(second, first);
+        }
+        bool equal_keys(const TKey& first, const TKey& second) {
             return !less(first, second) && !less(second, first);
         }
         size_t get_height(const Node* node) const {
@@ -232,52 +235,56 @@ class BinarySearchTree {
             update_height(node);
             return node;
         }
-        template <typename Visitor>
-        void traverse(const Node* node, TraversalOrder order, Visitor& visit) const {
+        template <typename NodeVisitor>
+        void traverse_nodes(const Node* node, TraversalOrder order, NodeVisitor& visit) const {
             if (node == nullptr) return;
+            const Node* left = node->left_;
+            const Node* right = node->right_;
             switch (order) {
                 case TraversalOrder::RootLeftRight:
-                    visit(node->value_);
-                    traverse(node->left_, order, visit);
-                    traverse(node->right_, order, visit);
+                    visit(node);
+                    traverse_nodes(left, order, visit);
+                    traverse_nodes(right, order, visit);
                     break;
                 case TraversalOrder::RootRightLeft:
-                    visit(node->value_);
-                    traverse(node->right_, order, visit);
-                    traverse(node->left_, order, visit);
+                    visit(node);
+                    traverse_nodes(right, order, visit);
+                    traverse_nodes(left, order, visit);
                     break;
                 case TraversalOrder::LeftRightRoot:
-                    traverse(node->left_, order, visit);
-                    traverse(node->right_, order, visit);
-                    visit(node->value_);
+                    traverse_nodes(left, order, visit);
+                    traverse_nodes(right, order, visit);
+                    visit(node);
                     break;
                 case TraversalOrder::LeftRootRight:
-                    traverse(node->left_, order, visit);
-                    visit(node->value_);
-                    traverse(node->right_, order, visit);
+                    traverse_nodes(left, order, visit);
+                    visit(node);
+                    traverse_nodes(right, order, visit);
                     break;
                 case TraversalOrder::RightLeftRoot:
-                    traverse(node->right_, order, visit);
-                    traverse(node->left_, order, visit);
-                    visit(node->value_);
+                    traverse_nodes(right, order, visit);
+                    traverse_nodes(left, order, visit);
+                    visit(node);
                     break;
                 case TraversalOrder::RightRootLeft:
-                    traverse(node->right_, order, visit);
-                    visit(node->value_);
-                    traverse(node->left_, order, visit);
+                    traverse_nodes(right, order, visit);
+                    visit(node);
+                    traverse_nodes(left, order, visit);
                     break;
             }
         }
-        void swap(BinarySearchTree<T, Compare>& other) {
+        template <typename Visitor>
+        void traverse(const Node* node, TraversalOrder order, Visitor& visit) const {
+            auto adapter = [&](const Node* current) { visit(current->key_, current->value_); };
+            traverse_nodes(node, order, adapter);
+        }
+        void swap(BinarySearchTree<TKey, TValue>& other) {
             Node* temporary_root = root_;
             root_ = other.root_;
             other.root_ = temporary_root;
             size_t temporary_size = size_;
             size_ = other.size_;
             other.size_ = temporary_size;
-            Compare temporary_compare = less;
-            less = other.less;
-            other.less = temporary_compare;
             bool temporary_balanced = balanced_;
             balanced_ = other.balanced_;
             other.balanced_ = temporary_balanced;
@@ -346,8 +353,8 @@ class BinarySearchTree {
             return !is_red(root_) && check_red_black(root_) != -1;
         }
         void Balance() {
-            BinarySearchTree<T, Compare> rebuilt(less, true);
-            auto insert_value = [&](const T& value) { rebuilt.Insert(value); };
+            BinarySearchTree<TKey, TValue> rebuilt(true);
+            auto insert_value = [&](const TKey& key, const TValue& value) { rebuilt.Insert(key, value); };
             traverse(root_, TraversalOrder::LeftRootRight, insert_value);
             swap(rebuilt);
         }
