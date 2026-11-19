@@ -310,34 +310,34 @@ class BinarySearchTree {
             root_ = nullptr;
             size_ = 0;
         }
-        bool Insert(const T& value) {
+        bool Insert(const TKey& key, const TValue& value) {
             bool inserted = false;
             if (balanced_) {
-                root_ = rb_insert(root_, value, inserted);
+                root_ = rb_insert(root_, key, value, inserted);
                 root_->red_ = false;
             } else {
-                root_ = insert(root_, value, inserted);
+                root_ = insert(root_, key, value, inserted);
             }
             if (inserted) size_++;
             return inserted;
         }
-        const T* Find(const T& value) const {
-            Node* node = find(root_, value);
+        const TValue* Find(const TKey& key) const {
+            Node* node = find(root_, key);
             return node == nullptr ? nullptr : &node->value_;
         }
-        bool Contains(const T& value) const {
-            return find(root_, value) != nullptr;
+        bool Contains(const TKey& key) const {
+            return find(root_, key) != nullptr;
         }
-        bool Remove(const T& value) {
+        bool Remove(const TKey& key) {
             bool removed = false;
             if (balanced_) {
-                if (find(root_, value) == nullptr) return false;
+                if (find(root_, key) == nullptr) return false;
                 if (!is_red(root_->left_) && !is_red(root_->right_)) root_->red_ = true;
-                root_ = rb_remove(root_, value);
+                root_ = rb_remove(root_, key);
                 if (root_ != nullptr) root_->red_ = false;
                 removed = true;
             } else {
-                root_ = remove(root_, value, removed);
+                root_ = remove(root_, key, removed);
             }
             if (removed) size_--;
             return removed;
