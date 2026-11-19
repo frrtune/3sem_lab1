@@ -283,13 +283,12 @@ class BinarySearchTree {
             other.balanced_ = temporary_balanced;
         }
     public:
-        BinarySearchTree(Compare compare = Compare(), bool balanced = false) : root_(nullptr), size_(0), less(compare),
+        BinarySearchTree(bool balanced = false) : root_(nullptr), size_(0), balanced_(balanced) {}
+        BinarySearchTree(const BinarySearchTree& tree, bool balanced = false) : root_(clone(tree.root_)), size_(tree.size_),
         balanced_(balanced) {}
-        BinarySearchTree(const BinarySearchTree& tree, bool balanced = false) : root_(clone(tree.root_)), size_(tree.size_), less(tree.less),
-        balanced_(balanced) {}
-        BinarySearchTree<T, Compare>& operator=(const BinarySearchTree<T, Compare>& tree) {
+        BinarySearchTree<TKey, TValue>& operator=(const BinarySearchTree<TKey, TValue>& tree) {
             if (this != &tree) {
-                BinarySearchTree<T, Compare> copy = tree;
+                BinarySearchTree<TKey, TValue> copy = tree;
                 swap(copy);
             }
             return *this;
