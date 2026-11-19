@@ -1,13 +1,6 @@
 #pragma once
 
 
-template <typename T>
-struct Less {
-    bool operator()(const T& first, const T& second) const {
-        return first < second;
-    }
-};
-
 enum class TraversalOrder {
     RootLeftRight,
     RootRightLeft,
@@ -17,21 +10,28 @@ enum class TraversalOrder {
     RightRootLeft
 };
 
-template <typename T, typename Compare = Less<T>>
+template <typename TKey, typename TValue>
 class BinarySearchTree {
     private:
         struct Node {
-            T value_;
+            TKey key_;
+            TValue value_;
             Node* left_;
             Node* right_;
             size_t height_;
             bool red_;
-            Node(const T& value, bool red = false) : value_(value), left_(nullptr), right_(nullptr), height_(1), red_(red) {}
+            Node(const T& key, const T& value, bool red = false) 
+            : key_(key), value_(value), left_(nullptr), right_(nullptr), height_(1), red_(red) {}
         };
         Node* root_;
         size_t size_;
-        Compare less_;
         bool balanced_;
+        bool less(const TKey& first, const TKey& second) const {
+            return first < second;
+        }
+        bool equal(const TKey& first, const TKey& second) const {
+            return !less(first, second) && !less(second, first);
+        }
         size_t get_height(const Node* node) const {
             return node == nullptr ? 0 : node->height_;
         }
@@ -40,9 +40,6 @@ class BinarySearchTree {
         }
         void update_height(Node* node) {
             node->height_ = 1 + max_height(get_height(node->left_), get_height(node->right_));
-        }
-        bool equal_values(const T& first, const T& second) const {
-            return !less_(first, second) && !less_(second, first);
         }
 
         //балансировка
@@ -99,15 +96,15 @@ class BinarySearchTree {
             update_height(node);
             return node;
         }
-        Node* rb_insert(Node* node, const T& value, bool& inserted) {
+        Node* rb_insert(Node* node, const TKey& key, const TValue& value, bool& inserted) {
             if (node == nullptr) {
                 inserted = true;
-                return new Node(value, true);
+                return new Node(key, value, true);
             }
-            if (less_(value, node->value_)) {
-                node->left_ = rb_insert(node->left_, value, inserted);
-            } else if (less_(node->value_, value)) {
-                node->right_ = rb_insert(node->right_, value, inserted);
+            if (less(key, node->key_)) {
+                node->left_ = rb_insert(node->left_, key, value, inserted);
+            } else if (less(node->key_, key)) {
+                node->right_ = rb_insert(node->right_, key, value, inserted);
             } else {
                 return node;
             }
@@ -120,18 +117,18 @@ class BinarySearchTree {
             return fix_up(node);
         }
 
-        Node* rb_remove(Node* node, const T& value) {
-            if (less_(value, node->value_)) {
+        Node* rb_remove(Node* node, const TKey& key) {
+            if (less(key, node->key_)) {
                 if (!is_red(node->left_) && !is_red(node->left_->left_)) node = move_red_left(node);
-                node->left_ = rb_remove(node->left_, value);
+                node->left_ = rb_remove(node->left_, key);
             } else {
                 if (is_red(node->left_)) node = rotate_right(node);
-                if (equal_values(value, node->value_) && node->right_ == nullptr) {
+                if (equal_keys(key, node->key_) && node->right_ == nullptr) {
                     delete node;
                     return nullptr;
                 }
                 if (!is_red(node->right_) && !is_red(node->right_->left_)) node = move_red_right(node);
-                if (equal_values(value, node->value_)) {
+                if (equal_keys(key, node->key_)) {
                     Node* successor = min_node(node->right_);
                     Node* new_right = rb_detach_min(node->right_);
                     successor->left_ = node->left_;
@@ -140,7 +137,7 @@ class BinarySearchTree {
                     delete node;
                     node = successor;
                 } else {
-                    node->right_ = rb_remove(node->right_, value);
+                    node->right_ = rb_remove(node->right_, key);
                 }
             }
             return fix_up(node);
@@ -163,7 +160,7 @@ class BinarySearchTree {
         }
         Node* clone(const Node* source) {
             if (source == nullptr) return nullptr;
-            Node* copy = new Node(source->value_);
+            Node* copy = new Node(source->key_, source->value_);
             copy->height_ = source->height_;
             copy->red_ = source->red_;
             try {
@@ -175,25 +172,25 @@ class BinarySearchTree {
             }
             return copy;
         }
-        Node* insert(Node* node, const T& value, bool& inserted) {
+        Node* insert(Node* node, const TKey& key, const TValue& value, bool& inserted) {
             if (node == nullptr) {
                 inserted = true;
-                return new Node(value);
+                return new Node(key, value);
             }
-            if (less_(value, node->value_)) {
-                node->left_ = insert(node->left_, value, inserted);
-            } else if (less_(node->value_, value)) {
-                node->right_ = insert(node->right_, value, inserted);
+            if (less(key, node->key_)) {
+                node->left_ = insert(node->left_, key, value, inserted);
+            } else if (less(node->key_, key)) {
+                node->right_ = insert(node->right_, key, value, inserted);
             } else {
                 return node;
             }
             update_height(node);
             return node;
         }
-        Node* find(Node* node, const T& value) const {
+        Node* find(Node* node, const TKey& key) const {
             if (node == nullptr) return nullptr;
-            if (less_(value, node->value_)) return find(node->left_, value);
-            if (less_(node->value_, value)) return find(node->right_, value);
+            if (less(key, node->key_)) return find(node->left_, key);
+            if (less(node->key_, key)) return find(node->right_, key);
             return node;
         }
         Node* min_node(Node* node) {
@@ -208,12 +205,12 @@ class BinarySearchTree {
             update_height(node);
             return node;
         }
-        Node* remove(Node* node, const T& value, bool& removed) {
+        Node* remove(Node* node, const TKey& key, bool& removed) {
             if (node == nullptr) return nullptr;
-            if (less_(value, node->value_)) {
-                node->left_ = remove(node->left_, value, removed);
-            } else if (less_(node->value_, value)) {
-                node->right_ = remove(node->right_, value, removed);
+            if (less(key, node->key_)) {
+                node->left_ = remove(node->left_, key, removed);
+            } else if (less(node->key_, key)) {
+                node->right_ = remove(node->right_, key, removed);
             } else {
                 removed = true;
                 if (node->right_ == nullptr) {
@@ -278,17 +275,17 @@ class BinarySearchTree {
             size_t temporary_size = size_;
             size_ = other.size_;
             other.size_ = temporary_size;
-            Compare temporary_compare = less_;
-            less_ = other.less_;
-            other.less_ = temporary_compare;
+            Compare temporary_compare = less;
+            less = other.less;
+            other.less = temporary_compare;
             bool temporary_balanced = balanced_;
             balanced_ = other.balanced_;
             other.balanced_ = temporary_balanced;
         }
     public:
-        BinarySearchTree(Compare compare = Compare(), bool balanced = false) : root_(nullptr), size_(0), less_(compare),
+        BinarySearchTree(Compare compare = Compare(), bool balanced = false) : root_(nullptr), size_(0), less(compare),
         balanced_(balanced) {}
-        BinarySearchTree(const BinarySearchTree& tree, bool balanced = false) : root_(clone(tree.root_)), size_(tree.size_), less_(tree.less_),
+        BinarySearchTree(const BinarySearchTree& tree, bool balanced = false) : root_(clone(tree.root_)), size_(tree.size_), less(tree.less),
         balanced_(balanced) {}
         BinarySearchTree<T, Compare>& operator=(const BinarySearchTree<T, Compare>& tree) {
             if (this != &tree) {
@@ -350,7 +347,7 @@ class BinarySearchTree {
             return !is_red(root_) && check_red_black(root_) != -1;
         }
         void Balance() {
-            BinarySearchTree<T, Compare> rebuilt(less_, true);
+            BinarySearchTree<T, Compare> rebuilt(less, true);
             auto insert_value = [&](const T& value) { rebuilt.Insert(value); };
             traverse(root_, TraversalOrder::LeftRootRight, insert_value);
             swap(rebuilt);
