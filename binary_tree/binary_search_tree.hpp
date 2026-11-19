@@ -362,4 +362,29 @@ class BinarySearchTree {
         void Traverse(TraversalOrder order, Visitor visit) const {
             traverse(root_, order, visit);
         }
+
+        //map, reduce, where
+        template <typename R, typename F>
+        BinarySearchTree<TKey, R> Map(F func) const {
+            BinarySearchTree<TKey, R> result(balanced_);
+            traverse(root_, TraversalOrder::RootLeftRight, [&](const TKey& key, const TValue& value) {
+                result.Insert(key, func(key, value));
+            });
+            return result;
+        }
+        template <typename R, typename Reducer>
+        R Reduce(Reducer reducer, R initial) const {
+            traverse(root_, TraversalOrder::LeftRootRight, [&](const TKey& key, const TValue& value) {
+                initial = reducer(initial, key, value);
+            });
+            return initial;
+        }
+        template <typename Predicate>
+        BinarySearchTree<TKey, TValue> Where(Predicate predicate) const {
+            BinarySearchTree<TKey, TValue> result(balanced_);
+            traverse(root_, TraversalOrder::RootLeftRight, [&](const TKey& key, const TValue& value) {
+                if (predicate(key, value)) result.Insert(key, value);
+            });
+            return result;
+        }
     };
