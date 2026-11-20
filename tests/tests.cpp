@@ -110,3 +110,71 @@ TEST(BinarySearchTreeRBTTest, BalancedTreeRemoveMaintainsProperties) {
     rbt.Remove(2);
     EXPECT_TRUE(rbt.IsRedBlack());
 }
+
+TEST_F(BinarySearchTreeTest, MapTransformsValues) {
+    auto mapped = tree.Map<int>([](const int&, const int& value) { return value * 10; });
+    EXPECT_EQ(Traversed(mapped, TraversalOrder::LeftRootRight), (std::vector<int>{10, 20, 30, 40, 50, 60, 70}));
+}
+
+TEST_F(BinarySearchTreeTest, MapKeepsKeysAndOrder) {
+    auto mapped = tree.Map<int>([](const int& key, const int&) { return key + 1; });
+    EXPECT_EQ(Traversed(mapped, TraversalOrder::LeftRootRight), (std::vector<int>{2, 3, 4, 5, 6, 7, 8}));
+}
+
+TEST_F(BinarySearchTreeTest, ReduceSumsValues) {
+    int sum = tree.Reduce<int>([](int acc, const int&, const int& value) { return acc + value; }, 0);
+    EXPECT_EQ(sum, 28);
+}
+
+TEST_F(BinarySearchTreeTest, ReduceWithInitial) {
+    int sum = tree.Reduce<int>([](int acc, const int&, const int& value) { return acc + value; }, 100);
+    EXPECT_EQ(sum, 128);
+}
+
+TEST_F(BinarySearchTreeTest, WhereKeepsMatching) {
+    auto filtered = tree.Where([](const int&, const int& value) { return value % 2 == 0; });
+    EXPECT_EQ(Traversed(filtered, TraversalOrder::LeftRootRight), (std::vector<int>{2, 4, 6}));
+}
+
+TEST_F(BinarySearchTreeTest, WhereKeepsNothing) {
+    auto filtered = tree.Where([](const int&, const int&) { return false; });
+    EXPECT_TRUE(filtered.IsEmpty());
+}
+
+TEST_F(BinarySearchTreeTest, EnumeratorInOrder) {
+    auto it = tree.GetEnumerator(TraversalOrder::LeftRootRight);
+    std::vector<int> result;
+    while (it.Next()) result.push_back(it.GetCurrentValue());
+    EXPECT_EQ(result, (std::vector<int>{1, 2, 3, 4, 5, 6, 7}));
+}
+
+TEST_F(BinarySearchTreeTest, EnumeratorHasNextAndTryGetCurrent) {
+    auto it = tree.GetEnumerator();
+    EXPECT_TRUE(it.HasNext());
+    EXPECT_TRUE(it.Next());
+    int key = 0, value = 0;
+    EXPECT_TRUE(it.TryGetCurrent(key, value));
+    EXPECT_EQ(key, 1);
+    EXPECT_EQ(value, 1);
+}
+
+TEST_F(BinarySearchTreeTest, EnumeratorThrowsBeforeStart) {
+    auto it = tree.GetEnumerator();
+    EXPECT_THROW(it.GetCurrentKey(), RangeError);
+    EXPECT_THROW(it.GetCurrentValue(), RangeError);
+}
+
+TEST_F(BinarySearchTreeTest, EnumeratorThrowsAfterEnd) {
+    auto it = tree.GetEnumerator();
+    while (it.Next()) {}
+    EXPECT_THROW(it.GetCurrentKey(), RangeError);
+}
+
+TEST_F(BinarySearchTreeTest, EnumeratorReset) {
+    auto it = tree.GetEnumerator();
+    while (it.Next()) {}
+    it.Reset();
+    EXPECT_TRUE(it.HasNext());
+    EXPECT_TRUE(it.Next());
+    EXPECT_EQ(it.GetCurrentValue(), 1);
+}
