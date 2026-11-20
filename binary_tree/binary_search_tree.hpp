@@ -1,6 +1,10 @@
 #pragma once
 
 
+#include <vector>
+#include "../2sem_lab5/exceptions/exceptions.hpp"
+
+
 enum class TraversalOrder {
     RootLeftRight,
     RootRightLeft,
@@ -290,6 +294,45 @@ class BinarySearchTree {
             other.balanced_ = temporary_balanced;
         }
     public:
+        class TreeEnumerator {
+            private:
+                std::vector<const Node*> items_;
+                size_t position_;
+                friend class BinarySearchTree<TKey, TValue>;
+                TreeEnumerator() : items_(), position_(0) {}
+                bool is_inside() const {
+                    return position_ >= 1 && position_ <= items_.size();
+                }
+            public:
+                bool HasNext() const {
+                    return position_ < items_.size();
+                }
+                bool Next() {
+                    if (position_ < items_.size()) {
+                        position_++;
+                        return true;
+                    }
+                    position_ = items_.size() + 1;
+                    return false;
+                }
+                const TKey& GetCurrentKey() const {
+                    if (!is_inside()) throw RangeError(position_, items_.size());
+                    return items_[position_ - 1]->key_;
+                }
+                const TValue& GetCurrentValue() const {
+                    if (!is_inside()) throw RangeError(position_, items_.size());
+                    return items_[position_ - 1]->value_;
+                }
+                bool TryGetCurrent(TKey& key, TValue& value) const {
+                    if (!is_inside()) return false;
+                    key = items_[position_ - 1]->key_;
+                    value = items_[position_ - 1]->value_;
+                    return true;
+                }
+                void Reset() {
+                    position_ = 0;
+                }
+        };
         BinarySearchTree(bool balanced = false) : root_(nullptr), size_(0), balanced_(balanced) {}
         BinarySearchTree(const BinarySearchTree& tree, bool balanced = false) : root_(clone(tree.root_)), size_(tree.size_),
         balanced_(balanced) {}
@@ -367,24 +410,34 @@ class BinarySearchTree {
         template <typename R, typename F>
         BinarySearchTree<TKey, R> Map(F func) const {
             BinarySearchTree<TKey, R> result(balanced_);
-            traverse(root_, TraversalOrder::RootLeftRight, [&](const TKey& key, const TValue& value) {
+            auto visitor = [&](const TKey& key, const TValue& value) {
                 result.Insert(key, func(key, value));
-            });
+            };
+            traverse(root_, TraversalOrder::RootLeftRight, visitor);
             return result;
         }
         template <typename R, typename Reducer>
         R Reduce(Reducer reducer, R initial) const {
-            traverse(root_, TraversalOrder::LeftRootRight, [&](const TKey& key, const TValue& value) {
+            auto visitor = [&](const TKey& key, const TValue& value) {
                 initial = reducer(initial, key, value);
-            });
+            };
+            traverse(root_, TraversalOrder::LeftRootRight, visitor);
             return initial;
         }
         template <typename Predicate>
         BinarySearchTree<TKey, TValue> Where(Predicate predicate) const {
             BinarySearchTree<TKey, TValue> result(balanced_);
-            traverse(root_, TraversalOrder::RootLeftRight, [&](const TKey& key, const TValue& value) {
+            auto visitor = [&](const TKey& key, const TValue& value) {
                 if (predicate(key, value)) result.Insert(key, value);
-            });
+            };
+            traverse(root_, TraversalOrder::RootLeftRight, visitor);
             return result;
+        }
+        TreeEnumerator GetEnumerator(TraversalOrder order = TraversalOrder::LeftRootRight) const {
+            TreeEnumerator enumerator;
+            enumerator.items_.reserve(size_);
+            auto collect = [&](const Node* node) { enumerator.items_.push_back(node); };
+            traverse_nodes(root_, order, collect);
+            return enumerator;
         }
     };
