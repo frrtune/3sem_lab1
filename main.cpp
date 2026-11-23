@@ -25,7 +25,8 @@ int main() {
     int choice = -1;
     while (choice != 0) {
         cout << "\n1. Новое дерево (тип + режим)\n2. Добавить\n3. Удалить (по ключу)\n4. Найти (по ключу)\n5. Статистика\n"
-             << "6. Обход (итератор)\n7. Map (значения * k)\n8. Where (фильтр)\n9. Reduce (свёртка)\n0. Выход\nВыбор: ";
+             << "6. Обход (итератор)\n7. Map (значения * k)\n8. Where (фильтр)\n9. Reduce (свёртка)\n"
+             << "10. Извлечь поддерево (по ключу)\n11. Поиск вхождения поддерева\n0. Выход\nВыбор: ";
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -382,6 +383,133 @@ int main() {
                             int count = t_student.Reduce<int>(
                                 [](int acc, const int&, const Student&) { return acc + 1; }, 0);
                             cout << "Всего студентов: " << count << "\n";
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case 10: {
+                    int key;
+                    cout << "Введите ключ корня поддерева: ";
+                    if (!(cin >> key)) {
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Некорректный ввод\n";
+                        break;
+                    }
+                    switch (type) {
+                        case 1: {
+                            auto sub = t_int.GetSubtree(key);
+                            auto it = sub.GetEnumerator();
+                            while (it.Next()) {
+                                cout << it.GetCurrentKey() << " -> " << it.GetCurrentValue() << "\n";
+                            }
+                            break;
+                        }
+                        case 2: {
+                            auto sub = t_complex.GetSubtree(key);
+                            auto it = sub.GetEnumerator();
+                            while (it.Next()) {
+                                cout << it.GetCurrentKey() << " -> " << it.GetCurrentValue() << "\n";
+                            }
+                            break;
+                        }
+                        case 3: {
+                            auto sub = t_teacher.GetSubtree(key);
+                            auto it = sub.GetEnumerator();
+                            while (it.Next()) {
+                                cout << it.GetCurrentKey() << " -> " << it.GetCurrentValue() << "\n";
+                            }
+                            break;
+                        }
+                        case 4: {
+                            auto sub = t_student.GetSubtree(key);
+                            auto it = sub.GetEnumerator();
+                            while (it.Next()) {
+                                cout << it.GetCurrentKey() << " -> " << it.GetCurrentValue() << "\n";
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case 11: {
+                    int n;
+                    cout << "Сколько узлов в поддереве: ";
+                    if (!(cin >> n) || n < 0) {
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Некорректный ввод\n";
+                        break;
+                    }
+                    switch (type) {
+                        case 1: {
+                            BinarySearchTree<int, int> sub(balanced);
+                            for (int i = 0; i < n; ++i) {
+                                int k, v;
+                                cout << "Ключ и значение: ";
+                                if (!(cin >> k >> v)) {
+                                    cin.clear();
+                                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    cout << "Некорректный ввод\n";
+                                    break;
+                                }
+                                sub.Insert(k, v);
+                            }
+                            cout << (t_int.ContainsSubtree(sub) ? "Входит\n" : "Не входит\n");
+                            break;
+                        }
+                        case 2: {
+                            BinarySearchTree<int, Complex> sub(balanced);
+                            for (int i = 0; i < n; ++i) {
+                                int k;
+                                double r, im;
+                                cout << "Ключ, Re и Im: ";
+                                if (!(cin >> k >> r >> im)) {
+                                    cin.clear();
+                                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    cout << "Некорректный ввод\n";
+                                    break;
+                                }
+                                sub.Insert(k, Complex(r, im));
+                            }
+                            cout << (t_complex.ContainsSubtree(sub) ? "Входит\n" : "Не входит\n");
+                            break;
+                        }
+                        case 3: {
+                            BinarySearchTree<int, Teacher> sub(balanced);
+                            for (int i = 0; i < n; ++i) {
+                                int k;
+                                size_t id;
+                                string name, dept;
+                                cout << "Ключ, ID, имя и кафедра: ";
+                                if (!(cin >> k >> id >> name >> dept)) {
+                                    cin.clear();
+                                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    cout << "Некорректный ввод\n";
+                                    break;
+                                }
+                                sub.Insert(k, Teacher(PersonID(id), name, "M", "L", 0, dept));
+                            }
+                            cout << (t_teacher.ContainsSubtree(sub) ? "Входит\n" : "Не входит\n");
+                            break;
+                        }
+                        case 4: {
+                            BinarySearchTree<int, Student> sub(balanced);
+                            for (int i = 0; i < n; ++i) {
+                                int k;
+                                size_t id;
+                                string name, group;
+                                cout << "Ключ, ID, имя и группа: ";
+                                if (!(cin >> k >> id >> name >> group)) {
+                                    cin.clear();
+                                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    cout << "Некорректный ввод\n";
+                                    break;
+                                }
+                                sub.Insert(k, Student(PersonID(id), name, "M", "L", 0, group));
+                            }
+                            cout << (t_student.ContainsSubtree(sub) ? "Входит\n" : "Не входит\n");
                             break;
                         }
                     }

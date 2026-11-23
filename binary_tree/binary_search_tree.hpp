@@ -36,7 +36,7 @@ class BinarySearchTree {
         bool equal_values(const TKey& first, const TKey& second) const {
             return !less(first, second) && !less(second, first);
         }
-        bool equal_keys(const TKey& first, const TKey& second) {
+        bool equal_keys(const TKey& first, const TKey& second) const {
             return !less(first, second) && !less(second, first);
         }
         size_t get_height(const Node* node) const {
@@ -293,6 +293,32 @@ class BinarySearchTree {
             balanced_ = other.balanced_;
             other.balanced_ = temporary_balanced;
         }
+
+        //subtree
+        size_t count_nodes(const Node* node) const {
+            if (node == nullptr) return 0;
+            return 1 + count_nodes(node->left_) + count_nodes(node->right_);
+        }
+
+        template <typename Result>
+        Result subtree_to(const TKey& key) {
+            Node* node = find(root_, key);
+            if (node == nullptr) {
+                throw InvalidArgumentError("key is not found");
+            }
+            Result result;
+            Node* copy = clone(node);
+            copy->red_ = false;
+            result.root_ = copy;
+            result.size_ = count_nodes(node);
+            return result;
+        }
+        bool same_tree(const Node* first, const Node* second) const {
+            if (first == nullptr || second == nullptr) return first == second;
+            return equal_keys(first->key_, second->key_) &&
+                   same_tree(first->left_, second->left_) &&
+                   same_tree(first->right_, second->right_);
+        }
     public:
         class TreeEnumerator {
             private:
@@ -439,5 +465,13 @@ class BinarySearchTree {
             auto collect = [&](const Node* node) { enumerator.items_.push_back(node); };
             traverse_nodes(root_, order, collect);
             return enumerator;
+        }
+        BinarySearchTree<TKey, TValue> GetSubtree(const TKey& key) {
+            return subtree_to<BinarySearchTree<TKey, TValue>>(key);
+        }
+        bool ContainsSubtree(const BinarySearchTree<TKey, TValue>& subtree) {
+            if (subtree.root_ == nullptr) return true;
+            const Node* node = find(root_, subtree.root_->key_);
+            return node != nullptr && same_tree(node, subtree.root_);
         }
     };
