@@ -5,7 +5,7 @@
 #include "../2sem_lab5/exceptions/exceptions.hpp"
 
 
-enum class TraversalOrder {
+enum TraversalOrder {
     RootLeftRight,
     RootRightLeft,
     LeftRightRoot,
@@ -226,41 +226,92 @@ class BinarySearchTree {
     public:
         class TreeEnumerator {
             private:
-                std::vector<const Node*> items_;
+                struct Frame {
+                    const Node* node;
+                    size_t step;
+                };
+                const Node* root_;
+                const Node* current_;
+                size_t size_;
                 size_t position_;
+                TraversalOrder order_;
+                std::vector<Frame> stack_;
                 friend class BinarySearchTree<TKey, TValue>;
-                TreeEnumerator() : items_(), position_(0) {}
+                TreeEnumerator(const Node* root, size_t size, TraversalOrder order) : root_(root), current_(nullptr), size_(size),
+                    position_(0), order_(order) {
+                        if (root_ != nullptr) {
+                            stack_.push_back({root_, 0});
+                        }
+                }
                 bool is_inside() const {
-                    return position_ >= 1 && position_ <= items_.size();
+                    return current_ != nullptr;
                 }
             public:
                 bool HasNext() const {
-                    return position_ < items_.size();
+                    return position_ < size_;
                 }
                 bool Next() {
-                    if (position_ < items_.size()) {
-                        position_++;
-                        return true;
+                    if (!HasNext()) {
+                        current_ = nullptr;
+                        position_ = size_ + 1;
+                        return false;
                     }
-                    position_ = items_.size() + 1;
+                    const size_t actions[6][3] = {
+                        {0, 1, 2}, //0 - корень, 1 - лево, 2 - право
+                        {0, 2, 1},
+                        {1, 2, 0},
+                        {1, 0, 2},
+                        {2, 1, 0},
+                        {2, 0, 1}
+                    };
+                    while (!stack_.empty()) {
+                        Frame& Frame = stack_.back();
+                        if (Frame.step == 3) {
+                            stack_.pop_back();
+                            continue;
+                        }
+                        const Node* node = Frame.node;
+                        size_t action = actions[order_][frame.step++];
+                        if (action == 0) {
+                            current_ = node;
+                            ++position_;
+                            return true;
+                        }
+                        const Node* child =
+                            action == 1 ? node->left_ : node->right_;
+                        if (child != nullptr) {
+                            stack_.push_back({child, 0});
+                        }
+                    }
+                    current_ = nullptr;
+                    position_ = size_ + 1;
                     return false;
                 }
                 const TKey& GetCurrentKey() const {
-                    if (!is_inside()) throw RangeError(position_, items_.size());
-                    return items_[position_ - 1]->key_;
+                    if (!is_inside())
+                        throw RangeError(position_, size_);
+
+                    return current_->key_;
                 }
                 const TValue& GetCurrentValue() const {
-                    if (!is_inside()) throw RangeError(position_, items_.size());
-                    return items_[position_ - 1]->value_;
+                    if (!is_inside())
+                        throw RangeError(position_, size_);
+
+                    return current_->value_;
                 }
                 bool TryGetCurrent(TKey& key, TValue& value) const {
                     if (!is_inside()) return false;
-                    key = items_[position_ - 1]->key_;
-                    value = items_[position_ - 1]->value_;
+                    key = GetCurrentKey();
+                    value = GetCurrentValue();
                     return true;
                 }
                 void Reset() {
+                    stack_.clear();
+                    current_ = nullptr;
                     position_ = 0;
+                    if (root_ != nullptr) {
+                        stack_.push_back({root_, 0});
+                    }
                 }
         };
         BinarySearchTree() : root_(nullptr), size_(0) {}
@@ -313,11 +364,7 @@ class BinarySearchTree {
             traverse(root_, order, visit);
         }
         TreeEnumerator GetEnumerator(TraversalOrder order = TraversalOrder::LeftRootRight) const {
-            TreeEnumerator enumerator;
-            enumerator.items_.reserve(size_);
-            auto collect = [&](const Node* node) { enumerator.items_.push_back(node); };
-            traverse_nodes(root_, order, collect);
-            return enumerator;
+            return TreeEnumerator(root_, size_, order);
         }
 
         //map, reduce, where
